@@ -5,18 +5,28 @@ using UnityEngine;
 public class GravityObject : MonoBehaviour
 {
     public static List<GravityObject> GravityObjects;
-    private GravityObject[] attractions;
+    private GravityObject centralBody;
     public Rigidbody rb;
+    private Rigidbody centralBodyRb;
     [SerializeField]
     public Vector3 initialVelocity;
 
     public Vector3 velocity { get; private set; }
-
-    private bool startAttraction;
+    private Vector3 centralBodyInitialPostion;
+    public GameObject objectWithOrbitLines;
+    private OrbitLines refScript;
+    private Vector3 newPos;
+    private int count;
 
     private void Awake()
     {
         velocity = initialVelocity;
+
+        refScript = objectWithOrbitLines.GetComponent<OrbitLines>();
+
+        centralBody = refScript.centralBody;
+        centralBodyRb = getRb(centralBody);
+        centralBodyInitialPostion = centralBodyRb.position;
     }
 
     private void OnEnable()
@@ -26,6 +36,10 @@ public class GravityObject : MonoBehaviour
             GravityObjects = new List<GravityObject>();
         }
         GravityObjects.Add(this);
+    }
+
+    private Rigidbody getRb(GravityObject gravityObject) {
+        return gravityObject.rb;
     }
 
     private void OnDisable()
@@ -39,7 +53,8 @@ public class GravityObject : MonoBehaviour
 
         for (int i = 0; i < GravityObjects.Count; i++)
         {
-            rb.MovePosition(rb.position + velocity * Universal.physicsTimeStep);
+            count = i;
+            rb.MovePosition(this.newPos);
         }
     }
 
@@ -49,6 +64,10 @@ public class GravityObject : MonoBehaviour
         {
             if (body != this)
             {
+                if (refScript.relativeToBody) {
+                    Vector3 referenceBodyPosition = centralBodyRb.position;
+                }
+
                 Rigidbody attractedBody = body.rb;
                 
                 Vector3 direction = (attractedBody.position - rb.position);
@@ -58,6 +77,13 @@ public class GravityObject : MonoBehaviour
                         
                 Vector3 acceleration = direction * (Universal.gravitationalConstant * (rb.mass * attractedBody.mass) / distance);
                 velocity += acceleration * Universal.physicsTimeStep;
+                
+                this.newPos = rb.position + velocity * Universal.physicsTimeStep;
+                if (refScript.relativeToBody) {
+                     var centralBodyOffset = centralBodyRb.position - centralBodyInitialPostion;
+                     this.newPos -= centralBodyOffset;
+            
+                }
             }
         }
     }
