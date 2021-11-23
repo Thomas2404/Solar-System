@@ -1,4 +1,7 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Collections.Generic;
+using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 [ExecuteInEditMode]
@@ -36,6 +39,8 @@ public class OrbitLines : MonoBehaviour {
         var virtualBodies = new VirtualBody[bodies.Length];
         //Make another local array, this time of Vector3s with the same length as bodies.
         var drawPoints = new Vector3[bodies.Length][];
+        var collisionPoints = new List<Vector3>();
+        var bodyRadius = new List<float>();
         int referenceFrameIndex = 0;
         Vector3 referenceBodyInitialPosition = Vector3.zero;
 
@@ -75,6 +80,25 @@ public class OrbitLines : MonoBehaviour {
             }
         }
 
+        for (int step = 0; step < numSteps; step++)
+        {
+            for (int length = 0; length < virtualBodies.Length; length++)
+            {
+                Vector3 bodyPosition = drawPoints[length][step];
+                for (int i = 0; i < drawPoints.Length; i++)
+                {
+                    Vector3 secondBodyPostion = drawPoints[i][step];
+                    
+
+                    if (Vector3.Distance(bodyPosition, secondBodyPostion) <= virtualBodies[length].mass + virtualBodies[i].mass)
+                    {
+                        collisionPoints.Add(bodyPosition);
+                        bodyRadius.Add(virtualBodies[length].radius);
+                    }
+                }
+            }
+        }
+
         // Draw paths
         for (int bodyIndex = 0; bodyIndex < virtualBodies.Length; bodyIndex++) {
             var pathColour = bodies[bodyIndex].gameObject.GetComponentInChildren<MeshRenderer> ().sharedMaterial.color; //
@@ -92,6 +116,12 @@ public class OrbitLines : MonoBehaviour {
                     Debug.DrawLine (drawPoints[bodyIndex][i], drawPoints[bodyIndex][i + 1], pathColour);
                 }
 
+                for (int i = 0; i < collisionPoints.Count; i++)
+                {
+                    //drawGizmos(collisionPoints[i], bodyRadius[i]);
+                    onDrawGizmos();
+                }
+
                 // Hide renderer
                 var lineRenderer = bodies[bodyIndex].gameObject.GetComponentInChildren<LineRenderer> ();
                 if (lineRenderer) {
@@ -100,6 +130,13 @@ public class OrbitLines : MonoBehaviour {
             }
 
         }
+    }
+    
+    private void onDrawGizmos()
+    {
+        Vector3 x = new Vector3(0, 0, 0);
+        Gizmos.color = Color.red;
+        Gizmos.DrawSphere(x, 1);
     }
 
     Vector3 CalculateAcceleration (int i, VirtualBody[] virtualBodies) {
@@ -136,11 +173,13 @@ public class OrbitLines : MonoBehaviour {
         public Vector3 position;
         public Vector3 velocity;
         public float mass;
+        public float radius;
 
         public VirtualBody (GravityObject body) {
             position = body.transform.position;
             velocity = body.initialVelocity;
             mass = body.rb.mass;
+            radius = body.radius;
         }
     }
 }

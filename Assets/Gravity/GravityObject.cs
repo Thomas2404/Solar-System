@@ -10,13 +10,15 @@ public class GravityObject : MonoBehaviour
     private Rigidbody centralBodyRb;
     [SerializeField]
     public Vector3 initialVelocity;
-
+    public float radius;
+    
     public Vector3 velocity { get; private set; }
     private Vector3 centralBodyInitialPostion;
     public GameObject objectWithOrbitLines;
     private OrbitLines refScript;
     private Vector3 newPos;
     private int count;
+    
 
     private void Awake()
     {
