@@ -245,10 +245,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bb922445503a1bd41add58bc720dbab8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  numSteps: 5000
+  numSteps: 1500
   timeStep: 0.01
-  usePhysicsTimeStep: 0
-  relativeToBody: 1
+  usePhysicsTimeStep: 1
+  relativeToBody: 0
   centralBody: {fileID: 1428352731}
   width: 100
   useThickLines: 0
@@ -260,7 +260,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1365658350}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.7547334, y: -0.6646042, z: -0.6451249}
+  m_LocalPosition: {x: -1.54, y: -0.6646042, z: -1.81}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -300,8 +300,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rb: {fileID: 1422536080}
-  initialVelocity: {x: -1.45, y: 0, z: 0}
-  radius: 0
+  initialVelocity: {x: 7.6, y: 0, z: 0}
+  radius: 0.5
   objectWithOrbitLines: {fileID: 1365658350}
 --- !u!54 &1422536080
 Rigidbody:
@@ -389,7 +389,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1422536078}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.29, y: -0.6646042, z: -1}
+  m_LocalPosition: {x: 0.7, y: -0.6646042, z: -6.68}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -429,7 +429,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rb: {fileID: 1428352735}
   initialVelocity: {x: 0, y: 0, z: 0}
-  radius: 0
+  radius: 2.5
   objectWithOrbitLines: {fileID: 1365658350}
 --- !u!23 &1428352732
 MeshRenderer:
@@ -488,8 +488,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1428352730}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.5, y: 0, z: 13.45}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 1.5, y: 0, z: 15.51}
+  m_LocalScale: {x: 5, y: 5, z: 5}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 1
@@ -502,7 +502,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1428352730}
   serializedVersion: 2
-  m_Mass: 1
+  m_Mass: 10
   m_Drag: 0
   m_AngularDrag: 0
   m_UseGravity: 0

@@ -87,13 +87,18 @@ public class OrbitLines : MonoBehaviour {
                 Vector3 bodyPosition = drawPoints[length][step];
                 for (int i = 0; i < drawPoints.Length; i++)
                 {
-                    Vector3 secondBodyPostion = drawPoints[i][step];
                     
-
-                    if (Vector3.Distance(bodyPosition, secondBodyPostion) <= virtualBodies[length].mass + virtualBodies[i].mass)
+                    if (virtualBodies[length] != virtualBodies[i])
                     {
-                        collisionPoints.Add(bodyPosition);
-                        bodyRadius.Add(virtualBodies[length].radius);
+                         Vector3 secondBodyPostion = drawPoints[i][step];
+                         //Debug.Log("Distance: " + Vector3.Distance(bodyPosition, secondBodyPostion));
+                         //Debug.Log("Radius: " + virtualBodies[length].radius + virtualBodies[i].radius);
+                        
+                         if (Vector3.Distance(bodyPosition, secondBodyPostion) < virtualBodies[length].radius + virtualBodies[i].radius)
+                         {
+                             collisionPoints.Add(bodyPosition);
+                             bodyRadius.Add(virtualBodies[length].radius);
+                         }
                     }
                 }
             }
@@ -115,11 +120,22 @@ public class OrbitLines : MonoBehaviour {
                 for (int i = 0; i < drawPoints[bodyIndex].Length - 1; i++) {
                     Debug.DrawLine (drawPoints[bodyIndex][i], drawPoints[bodyIndex][i + 1], pathColour);
                 }
-
+                
+                //for every point in collision point, draw a circle
                 for (int i = 0; i < collisionPoints.Count; i++)
                 {
-                    //drawGizmos(collisionPoints[i], bodyRadius[i]);
-                    onDrawGizmos();
+                    var boxPositions = new Vector3[5];
+                   
+                    boxPositions[0] = collisionPoints[i] + (Vector3.left + Vector3.back) / 2;
+                    boxPositions[1] = collisionPoints[i] + (Vector3.left + Vector3.forward) / 2;
+                    boxPositions[2] = collisionPoints[i] + (Vector3.right + Vector3.forward) / 2;
+                    boxPositions[3] = collisionPoints[i] + (Vector3.right + Vector3.back) / 2;
+                    boxPositions[4] = collisionPoints[i] + (Vector3.left + Vector3.back) / 2;
+
+                    for (int j = 0; j < boxPositions.Length - 1; j++)
+                    {
+                        Debug.DrawLine(boxPositions[j], boxPositions[j + 1], Color.red);
+                    }
                 }
 
                 // Hide renderer
@@ -130,13 +146,6 @@ public class OrbitLines : MonoBehaviour {
             }
 
         }
-    }
-    
-    private void onDrawGizmos()
-    {
-        Vector3 x = new Vector3(0, 0, 0);
-        Gizmos.color = Color.red;
-        Gizmos.DrawSphere(x, 1);
     }
 
     Vector3 CalculateAcceleration (int i, VirtualBody[] virtualBodies) {
