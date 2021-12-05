@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -80,14 +81,19 @@ public class GravityObject : MonoBehaviour
                 Vector3 acceleration = direction * (Universal.gravitationalConstant * (rb.mass * attractedBody.mass) / distance);
                 velocity += acceleration * Universal.physicsTimeStep;
                 
-                this.newPos = rb.position + velocity * Universal.physicsTimeStep;
                 if (refScript.relativeToBody) {
                      var centralBodyOffset = centralBodyRb.position - centralBodyInitialPostion;
                      this.newPos -= centralBodyOffset;
             
                 }
             }
+            this.newPos = rb.position + velocity * Universal.physicsTimeStep;
         }
+    }
+
+    private void OnCollisionEnter(Collision other)
+    {
+        Destroy(gameObject);
     }
 }
  

@@ -15,7 +15,8 @@ public class OrbitLines : MonoBehaviour {
     public GravityObject centralBody;
     public float width = 100;
     public bool useThickLines;
-    
+    public float thetaScale = 0.01f;
+
     //When play is pressed, hide the orbits.
     void Start () {
         if (Application.isPlaying) {
@@ -43,6 +44,8 @@ public class OrbitLines : MonoBehaviour {
         var bodyRadius = new List<float>();
         int referenceFrameIndex = 0;
         Vector3 referenceBodyInitialPosition = Vector3.zero;
+        Dictionary<VirtualBody, bool> collisions = new Dictionary<VirtualBody, bool>();
+        int virtualBodiesLength = virtualBodies.Length;
 
         // Initialize virtual bodies (don't want to move the actual bodies)
         for (int i = 0; i < virtualBodies.Length; i++) {
@@ -54,6 +57,8 @@ public class OrbitLines : MonoBehaviour {
                 referenceFrameIndex = i;
                 referenceBodyInitialPosition = virtualBodies[i].position;
             }
+            
+            collisions.Add(virtualBodies[i], false);
         }
 
         // Simulate for every iteration.
@@ -62,7 +67,7 @@ public class OrbitLines : MonoBehaviour {
             Vector3 referenceBodyPosition = (relativeToBody) ? virtualBodies[referenceFrameIndex].position : Vector3.zero;
             // Update velocities for every attraction object
             for (int i = 0; i < virtualBodies.Length; i++) {
-                virtualBodies[i].velocity += CalculateAcceleration (i, virtualBodies) * timeStep;
+                virtualBodies[i].velocity += CalculateAcceleration (i, virtualBodies, collisions) * timeStep;
             }
             // Update positions
             for (int i = 0; i < virtualBodies.Length; i++) {
@@ -75,37 +80,37 @@ public class OrbitLines : MonoBehaviour {
                 if (relativeToBody && i == referenceFrameIndex) {
                     newPos = referenceBodyInitialPosition;
                 }
-
+                
                 drawPoints[i][step] = newPos;
             }
-        }
-
-        for (int step = 0; step < numSteps; step++)
-        {
-            for (int length = 0; length < virtualBodies.Length; length++)
+            
+            
+            
+            if (collisionPoints.Count < virtualBodies.Length)
             {
-                Vector3 bodyPosition = drawPoints[length][step];
-                for (int i = 0; i < drawPoints.Length; i++)
+                for (int length = 0; length < virtualBodies.Length; length++)
                 {
-                    
-                    if (virtualBodies[length] != virtualBodies[i])
+                    Vector3 bodyPosition = drawPoints[length][step];
+                    for (int i = 0; i < drawPoints.Length; i++)
                     {
-                         Vector3 secondBodyPostion = drawPoints[i][step];
-                         //Debug.Log("Distance: " + Vector3.Distance(bodyPosition, secondBodyPostion));
-                         //Debug.Log("Radius: " + virtualBodies[length].radius + virtualBodies[i].radius);
-                        
-                         if (Vector3.Distance(bodyPosition, secondBodyPostion) < virtualBodies[length].radius + virtualBodies[i].radius)
-                         {
-                             collisionPoints.Add(bodyPosition);
-                             bodyRadius.Add(virtualBodies[length].radius);
-                         }
+                    
+                        if (virtualBodies[length] != virtualBodies[i] && collisions[virtualBodies[length]] == false)
+                        {
+                            Vector3 secondBodyPostion = drawPoints[i][step];
+                            if (Vector3.Distance(bodyPosition, secondBodyPostion) < virtualBodies[length].radius + virtualBodies[i].radius)
+                            {
+                                collisionPoints.Add(bodyPosition);
+                                bodyRadius.Add(virtualBodies[length].radius);
+                                collisions[virtualBodies[length]] = true;
+                            }
+                        }
                     }
                 }
             }
         }
 
         // Draw paths
-        for (int bodyIndex = 0; bodyIndex < virtualBodies.Length; bodyIndex++) {
+        for (int bodyIndex = 0; bodyIndex < virtualBodiesLength; bodyIndex++) {
             var pathColour = bodies[bodyIndex].gameObject.GetComponentInChildren<MeshRenderer> ().sharedMaterial.color; //
 
             if (useThickLines) {
@@ -117,25 +122,46 @@ public class OrbitLines : MonoBehaviour {
                 lineRenderer.endColor = pathColour;
                 lineRenderer.widthMultiplier = width;
             } else {
+
+                for (int i = 0; i < drawPoints[bodyIndex].Length; i++)
+                {
+                    if (collisionPoints.Contains(drawPoints[bodyIndex][i]))
+                    {
+                        Array.Resize(ref drawPoints[bodyIndex], i);
+                    }
+                }
+                
                 for (int i = 0; i < drawPoints[bodyIndex].Length - 1; i++) {
+                    
                     Debug.DrawLine (drawPoints[bodyIndex][i], drawPoints[bodyIndex][i + 1], pathColour);
                 }
                 
                 //for every point in collision point, draw a circle
                 for (int i = 0; i < collisionPoints.Count; i++)
                 {
-                    var boxPositions = new Vector3[5];
-                   
-                    boxPositions[0] = collisionPoints[i] + (Vector3.left + Vector3.back) / 2;
-                    boxPositions[1] = collisionPoints[i] + (Vector3.left + Vector3.forward) / 2;
-                    boxPositions[2] = collisionPoints[i] + (Vector3.right + Vector3.forward) / 2;
-                    boxPositions[3] = collisionPoints[i] + (Vector3.right + Vector3.back) / 2;
-                    boxPositions[4] = collisionPoints[i] + (Vector3.left + Vector3.back) / 2;
 
-                    for (int j = 0; j < boxPositions.Length - 1; j++)
+                    var radius = bodyRadius[i];
+                    var size = (int) ((2.0f * Mathf.PI) / thetaScale) + 1;
+                    var theta = 0f;
+                    var circlePositions = new Vector3[size];
+                    Vector3 pos;
+
+                    for (int j = 0; j < size; j++)
                     {
-                        Debug.DrawLine(boxPositions[j], boxPositions[j + 1], Color.red);
+                        theta += (2.0f * Mathf.PI * thetaScale);
+                        float x = (radius / 3) * Mathf.PI * Mathf.Cos(theta);
+                        float z = (radius / 3) * Mathf.PI * Mathf.Sin(theta);
+                        x += collisionPoints[i].x;
+                        z += collisionPoints[i].z;
+                        pos = new Vector3(x, 0, z);
+                        circlePositions[j] = pos;
                     }
+
+                    for (int j = 0; j < circlePositions.Length - 1; j++)
+                    {
+                        Debug.DrawLine(circlePositions[j], circlePositions[j + 1], Color.red);
+                    }
+                    
                 }
 
                 // Hide renderer
@@ -148,15 +174,19 @@ public class OrbitLines : MonoBehaviour {
         }
     }
 
-    Vector3 CalculateAcceleration (int i, VirtualBody[] virtualBodies) {
+    Vector3 CalculateAcceleration (int i, VirtualBody[] virtualBodies, Dictionary<VirtualBody, bool> collisions) {
         Vector3 acceleration = Vector3.zero;
         for (int j = 0; j < virtualBodies.Length; j++) {
             if (i == j) {
                 continue;
             }
-            Vector3 direction = (virtualBodies[j].position - virtualBodies[i].position);
-            float distance = (virtualBodies[j].position - virtualBodies[i].position).sqrMagnitude;
-            acceleration += direction * (Universal.gravitationalConstant * (virtualBodies[j].mass * virtualBodies[i].mass) / distance);
+
+            if (!collisions[virtualBodies[j]])
+            {
+                Vector3 direction = (virtualBodies[j].position - virtualBodies[i].position);
+                float distance = (virtualBodies[j].position - virtualBodies[i].position).sqrMagnitude;
+                acceleration += direction * (Universal.gravitationalConstant * (virtualBodies[j].mass * virtualBodies[i].mass) / distance);
+            }
         }
         return acceleration;
     }
