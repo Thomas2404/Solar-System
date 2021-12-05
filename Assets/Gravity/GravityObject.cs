@@ -19,6 +19,7 @@ public class GravityObject : MonoBehaviour
     private OrbitLines refScript;
     private Vector3 newPos;
     private int count;
+    private bool relativeToBody;
     
 
     private void Awake()
@@ -39,6 +40,8 @@ public class GravityObject : MonoBehaviour
             GravityObjects = new List<GravityObject>();
         }
         GravityObjects.Add(this);
+
+        relativeToBody = refScript.relativeToBody;
     }
 
     private Rigidbody getRb(GravityObject gravityObject) {
@@ -57,7 +60,7 @@ public class GravityObject : MonoBehaviour
         for (int i = 0; i < GravityObjects.Count; i++)
         {
             count = i;
-            rb.MovePosition(this.newPos);
+            rb.MovePosition(newPos);
         }
     }
 
@@ -67,10 +70,6 @@ public class GravityObject : MonoBehaviour
         {
             if (body != this)
             {
-                if (refScript.relativeToBody) {
-                    Vector3 referenceBodyPosition = centralBodyRb.position;
-                }
-
                 Rigidbody attractedBody = body.rb;
                 
                 Vector3 direction = (attractedBody.position - rb.position);
@@ -81,18 +80,22 @@ public class GravityObject : MonoBehaviour
                 Vector3 acceleration = direction * (Universal.gravitationalConstant * (rb.mass * attractedBody.mass) / distance);
                 velocity += acceleration * Universal.physicsTimeStep;
                 
-                if (refScript.relativeToBody) {
+                if (relativeToBody && refScript.centralBody != null) {
                      var centralBodyOffset = centralBodyRb.position - centralBodyInitialPostion;
-                     this.newPos -= centralBodyOffset;
+                     newPos -= centralBodyOffset;
             
                 }
             }
-            this.newPos = rb.position + velocity * Universal.physicsTimeStep;
+            newPos = rb.position + velocity * Universal.physicsTimeStep;
         }
     }
 
     private void OnCollisionEnter(Collision other)
     {
+        if (relativeToBody && other.gameObject == refScript.centralBody)
+        {
+            relativeToBody = false;
+        }
         Destroy(gameObject);
     }
 }

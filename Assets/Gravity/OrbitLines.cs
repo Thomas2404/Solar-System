@@ -16,6 +16,7 @@ public class OrbitLines : MonoBehaviour {
     public float width = 100;
     public bool useThickLines;
     public float thetaScale = 0.01f;
+    public bool stopAfterCollision;
 
     //When play is pressed, hide the orbits.
     void Start () {
@@ -45,6 +46,7 @@ public class OrbitLines : MonoBehaviour {
         int referenceFrameIndex = 0;
         Vector3 referenceBodyInitialPosition = Vector3.zero;
         Dictionary<VirtualBody, bool> collisions = new Dictionary<VirtualBody, bool>();
+        Dictionary<VirtualBody, int> collisionStep = new Dictionary<VirtualBody, int>();
         int virtualBodiesLength = virtualBodies.Length;
 
         // Initialize virtual bodies (don't want to move the actual bodies)
@@ -60,7 +62,7 @@ public class OrbitLines : MonoBehaviour {
             
             collisions.Add(virtualBodies[i], false);
         }
-
+        
         // Simulate for every iteration.
         for (int step = 0; step < numSteps; step++) {
             //If using relativeToBody, reference is the body, else it's nothing.
@@ -85,7 +87,7 @@ public class OrbitLines : MonoBehaviour {
             }
             
             
-            
+
             if (collisionPoints.Count < virtualBodies.Length)
             {
                 for (int length = 0; length < virtualBodies.Length; length++)
@@ -93,15 +95,18 @@ public class OrbitLines : MonoBehaviour {
                     Vector3 bodyPosition = drawPoints[length][step];
                     for (int i = 0; i < drawPoints.Length; i++)
                     {
-                    
                         if (virtualBodies[length] != virtualBodies[i] && collisions[virtualBodies[length]] == false)
                         {
                             Vector3 secondBodyPostion = drawPoints[i][step];
                             if (Vector3.Distance(bodyPosition, secondBodyPostion) < virtualBodies[length].radius + virtualBodies[i].radius)
                             {
-                                collisionPoints.Add(bodyPosition);
-                                bodyRadius.Add(virtualBodies[length].radius);
-                                collisions[virtualBodies[length]] = true;
+                                if (!collisionStep.ContainsKey(virtualBodies[i]) || !(step - collisionStep[virtualBodies[i]] > 5))
+                                {
+                                    collisionPoints.Add(bodyPosition);
+                                    bodyRadius.Add(virtualBodies[length].radius);
+                                    collisions[virtualBodies[length]] = true;
+                                    collisionStep[virtualBodies[length]] = step;
+                                }
                             }
                         }
                     }
@@ -123,11 +128,14 @@ public class OrbitLines : MonoBehaviour {
                 lineRenderer.widthMultiplier = width;
             } else {
 
-                for (int i = 0; i < drawPoints[bodyIndex].Length; i++)
+                if (stopAfterCollision)
                 {
-                    if (collisionPoints.Contains(drawPoints[bodyIndex][i]))
+                    for (int i = 0; i < drawPoints[bodyIndex].Length; i++)
                     {
-                        Array.Resize(ref drawPoints[bodyIndex], i);
+                        if (collisionPoints.Contains(drawPoints[bodyIndex][i]))
+                        {
+                            Array.Resize(ref drawPoints[bodyIndex], i);
+                        }
                     }
                 }
                 
