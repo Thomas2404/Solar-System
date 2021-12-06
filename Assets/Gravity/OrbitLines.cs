@@ -100,7 +100,7 @@ public class OrbitLines : MonoBehaviour {
                             Vector3 secondBodyPostion = drawPoints[i][step];
                             if (Vector3.Distance(bodyPosition, secondBodyPostion) < virtualBodies[length].radius + virtualBodies[i].radius)
                             {
-                                if (!collisionStep.ContainsKey(virtualBodies[i]) || !(step - collisionStep[virtualBodies[i]] > 5))
+                                if (!collisionStep.ContainsKey(virtualBodies[i]) || !(step - collisionStep[virtualBodies[i]] > 0))
                                 {
                                     collisionPoints.Add(bodyPosition);
                                     bodyRadius.Add(virtualBodies[length].radius);
@@ -206,7 +206,7 @@ public class OrbitLines : MonoBehaviour {
         for (int bodyIndex = 0; bodyIndex < bodies.Length; bodyIndex++)
         {
             var lineRenderer = bodies[bodyIndex].gameObject.GetComponentInChildren<LineRenderer>();
-            lineRenderer.positionCount = 0;
+            //lineRenderer.positionCount = 0;
         }
     }
 

@@ -29,6 +29,7 @@ public class GravityObject : MonoBehaviour
         refScript = objectWithOrbitLines.GetComponent<OrbitLines>();
 
         centralBody = refScript.centralBody;
+        relativeToBody = refScript.relativeToBody;
         centralBodyRb = getRb(centralBody);
         centralBodyInitialPostion = centralBodyRb.position;
     }
@@ -41,7 +42,7 @@ public class GravityObject : MonoBehaviour
         }
         GravityObjects.Add(this);
 
-        relativeToBody = refScript.relativeToBody;
+        Debug.Log(relativeToBody);
     }
 
     private Rigidbody getRb(GravityObject gravityObject) {
@@ -82,21 +83,27 @@ public class GravityObject : MonoBehaviour
                 
                 if (relativeToBody && refScript.centralBody != null) {
                      var centralBodyOffset = centralBodyRb.position - centralBodyInitialPostion;
+                     newPos = rb.position + velocity * Universal.physicsTimeStep;
                      newPos -= centralBodyOffset;
             
                 }
             }
-            newPos = rb.position + velocity * Universal.physicsTimeStep;
+
+            if (!relativeToBody)
+            {
+                newPos = rb.position + velocity * Universal.physicsTimeStep;
+            }
+            
         }
     }
 
-    private void OnCollisionEnter(Collision other)
+    /*private void OnCollisionEnter(Collision other)
     {
         if (relativeToBody && other.gameObject == refScript.centralBody)
         {
             relativeToBody = false;
         }
         Destroy(gameObject);
-    }
+    }*/
 }
  
