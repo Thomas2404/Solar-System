@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
@@ -96,14 +97,26 @@ public class GravityObject : MonoBehaviour
             
         }
     }
+    Dictionary<GravityObject, float> collisions;
 
-    /*private void OnCollisionEnter(Collision other)
+    private void OnTriggerEnter(Collider other)
     {
         if (relativeToBody && other.gameObject == refScript.centralBody)
         {
             relativeToBody = false;
         }
-        Destroy(gameObject);
-    }*/
+
+        Rigidbody collisionRb = other.GetComponent<GravityObject>().rb;
+        if (rb.mass > collisionRb.mass)
+        {
+            rb.mass += collisionRb.mass;
+            radius = rb.mass / 10;
+            
+            gameObject.transform.localScale = new Vector3(radius * 2, radius * 2, radius * 2);
+            //put velocity stuff here
+
+            Destroy(other.gameObject);
+        }
+    }
 }
  
