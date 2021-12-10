@@ -33,6 +33,9 @@ public class GravityObject : MonoBehaviour
         relativeToBody = refScript.relativeToBody;
         centralBodyRb = getRb(centralBody);
         centralBodyInitialPostion = centralBodyRb.position;
+        
+        radius = rb.mass / 10;
+        gameObject.transform.localScale = new Vector3(radius * 2, radius * 2, radius * 2);
     }
 
     private void OnEnable()
@@ -70,6 +73,11 @@ public class GravityObject : MonoBehaviour
     {
         foreach (GravityObject body in GravityObjects)
         {
+            if (collision)
+            {
+                velocity += otherVelocity;
+                collision = false;
+            }
             if (body != this)
             {
                 Rigidbody attractedBody = body.rb;
@@ -94,10 +102,11 @@ public class GravityObject : MonoBehaviour
             {
                 newPos = rb.position + velocity * Universal.physicsTimeStep;
             }
-            
         }
     }
     Dictionary<GravityObject, float> collisions;
+    private bool collision;
+    private Vector3 otherVelocity;
 
     private void OnTriggerEnter(Collider other)
     {
@@ -113,7 +122,9 @@ public class GravityObject : MonoBehaviour
             radius = rb.mass / 10;
             
             gameObject.transform.localScale = new Vector3(radius * 2, radius * 2, radius * 2);
-            //put velocity stuff here
+
+            collision = true;
+            otherVelocity = collisionRb.velocity;
 
             Destroy(other.gameObject);
         }

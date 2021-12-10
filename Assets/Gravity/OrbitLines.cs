@@ -43,10 +43,16 @@ public class OrbitLines : MonoBehaviour {
         var drawPoints = new Vector3[bodies.Length][];
         var collisionPoints = new List<Vector3>();
         var bodyRadius = new List<float>();
+        //var collisionVelocity = new List<Vector3>();
         int referenceFrameIndex = 0;
         Vector3 referenceBodyInitialPosition = Vector3.zero;
         Dictionary<VirtualBody, bool> collisions = new Dictionary<VirtualBody, bool>();
         Dictionary<VirtualBody, int> collisionStep = new Dictionary<VirtualBody, int>();
+        
+        
+        Dictionary<int, Tuple<VirtualBody, Vector3>> collisionVelocity = new Dictionary<int, Tuple<VirtualBody, Vector3>>();
+        
+
         int virtualBodiesLength = virtualBodies.Length;
 
         // Initialize virtual bodies (don't want to move the actual bodies)
@@ -69,7 +75,7 @@ public class OrbitLines : MonoBehaviour {
             Vector3 referenceBodyPosition = (relativeToBody) ? virtualBodies[referenceFrameIndex].position : Vector3.zero;
             // Update velocities for every attraction object
             for (int i = 0; i < virtualBodies.Length; i++) {
-                virtualBodies[i].velocity += CalculateAcceleration (i, virtualBodies, collisions) * timeStep;
+                virtualBodies[i].velocity += CalculateAcceleration (i, virtualBodies, collisions, collisionVelocity) * timeStep;
             }
             // Update positions
             for (int i = 0; i < virtualBodies.Length; i++) {
@@ -102,10 +108,32 @@ public class OrbitLines : MonoBehaviour {
                             {
                                 if (!collisionStep.ContainsKey(virtualBodies[i]) || !(step - collisionStep[virtualBodies[i]] > 0))
                                 {
-                                    collisionPoints.Add(bodyPosition);
                                     bodyRadius.Add(virtualBodies[length].radius);
-                                    collisions[virtualBodies[length]] = true;
-                                    collisionStep[virtualBodies[length]] = step;
+
+                                    if (virtualBodies[length].mass > virtualBodies[i].mass)
+                                    {
+                                        VirtualBody rb = virtualBodies[length];
+                                        rb.mass += virtualBodies[i].mass;
+                                        rb.radius = rb.mass / 10;
+
+                                        Tuple<VirtualBody, Vector3> collision = new Tuple<VirtualBody, Vector3>(rb, virtualBodies[i].velocity);
+
+
+                                        collisionVelocity.Add(step, collision);
+                                    }
+                                    else
+                                    {
+                                        
+                                        collisionPoints.Add(bodyPosition);
+                                        collisions[virtualBodies[length]] = true;
+                                        collisionStep[virtualBodies[length]] = step;
+
+                                        //find how to get collision velocity from here to the acceleration thing
+                                        //Need to swap around the keys on velocitystep and collision velocity so that you can have multiple collisions with one ob ject without overrighting something
+
+                                        //virtualbody, step, and vector
+                                    }
+
                                 }
                             }
                         }
@@ -182,8 +210,14 @@ public class OrbitLines : MonoBehaviour {
         }
     }
 
-    Vector3 CalculateAcceleration (int i, VirtualBody[] virtualBodies, Dictionary<VirtualBody, bool> collisions) {
+    Vector3 CalculateAcceleration (int i, VirtualBody[] virtualBodies, Dictionary<VirtualBody, bool> collisions, Dictionary<int, Tuple<VirtualBody, Vector3>> collisionVelocity) {
+        
         Vector3 acceleration = Vector3.zero;
+        if (collisionVelocity.ContainsKey(i) && collisionVelocity[i].Item1 != virtualBodies[i])
+        {
+            acceleration += collisionVelocity[i].Item2;
+        }
+        
         for (int j = 0; j < virtualBodies.Length; j++) {
             if (i == j) {
                 continue;
@@ -226,7 +260,7 @@ public class OrbitLines : MonoBehaviour {
             position = body.transform.position;
             velocity = body.initialVelocity;
             mass = body.rb.mass;
-            radius = body.radius;
+            radius = body.rb.mass / 10;
         }
     }
 }
